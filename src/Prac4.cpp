@@ -38,12 +38,12 @@ void play_pause_isr(void)
         if(playing == true)
         {
             playing = false;
-            printf("paused");
+            printf("paused\n");
         }
         else if(playing == false)
         {
             playing  = true;
-            printf("playing");
+            printf("playing\n");
         }
     }
     lastInterruptTime = interruptTime;
@@ -51,7 +51,7 @@ void play_pause_isr(void)
 
 void stop_isr(void)
 {
-    printf("stopped");
+    printf("stopped\n");
     exit(EXIT_SUCCESS);
 }
 
@@ -73,7 +73,7 @@ int setup_gpio(void)
     //setting up interupts
     wiringPiISR(PLAY_BUTTON, INT_EDGE_FALLING, &play_pause_isr) ;
     wiringPiISR(STOP_BUTTON, INT_EDGE_FALLING, &stop_isr) ;
-    //TODO
+    
     return 0;
 }
 
@@ -98,12 +98,15 @@ void *playThread(void *threadargs)
         //Code to suspend playing if paused
         if(playing == false)
         {
-            digitalWrite(6,1);
+            while(playing == false)
+	    {
+	    	continue;
+	    }
         }
 
         if(playing == true)
         {
-            digitalWrite(6,0);
+            continue;
         }
 
         //Write the buffer out to SPI
@@ -124,8 +127,8 @@ void *playThread(void *threadargs)
 int main()
 {
     // Call the setup GPIO function
-	if(setup_gpio()==-1)
-	{
+    if(setup_gpio()==-1)
+    {
         printf("Your initialization isn't correct\n");
         return 0;
     }
@@ -136,7 +139,7 @@ int main()
      */
 
     //Write your logic here
-	pthread_attr_t tattr;
+    pthread_attr_t tattr;
     pthread_t thread_id;
     int newprio = 99;
     sched_param param;
