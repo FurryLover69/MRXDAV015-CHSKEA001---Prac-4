@@ -33,17 +33,15 @@ long lastInterruptTime = 0; //used for button debounce
 void play_pause_isr(void)
 {
     long interruptTime = millis();
-    if (interruptTime - lastInterruptTime>200)
+    if (interruptTime - lastInterruptTime>500)
     {
         if(playing == true)
         {
             playing = false;
-            printf("paused\n");
         }
         else if(playing == false)
         {
             playing  = true;
-            printf("playing\n");
         }
     }
     lastInterruptTime = interruptTime;
@@ -51,7 +49,6 @@ void play_pause_isr(void)
 
 void stop_isr(void)
 {
-    printf("stopped\n");
     exit(EXIT_SUCCESS);
 }
 
@@ -65,7 +62,6 @@ int setup_gpio(void)
     //setting up the buttons
     pinMode(PLAY_BUTTON, INPUT);
     pinMode(STOP_BUTTON, INPUT);
-    pinMode(6,OUTPUT);
     pullUpDnControl(PLAY_BUTTON, PUD_UP);
     pullUpDnControl(STOP_BUTTON, PUD_UP);
     //setting up the SPI interface
@@ -73,7 +69,7 @@ int setup_gpio(void)
     //setting up interupts
     wiringPiISR(PLAY_BUTTON, INT_EDGE_FALLING, &play_pause_isr) ;
     wiringPiISR(STOP_BUTTON, INT_EDGE_FALLING, &stop_isr) ;
-    
+    //TODO
     return 0;
 }
 
@@ -98,17 +94,11 @@ void *playThread(void *threadargs)
         //Code to suspend playing if paused
         if(playing == false)
         {
-            while(playing == false)
-	    {
-	    	continue;
-	    }
+	 continue;
         }
 
-        if(playing == true)
+        while(playing == true)
         {
-            continue;
-        }
-
         //Write the buffer out to SPI
         wiringPiSPIDataRW (0,buffer[bufferReading][buffer_location],2) ;
 
@@ -119,6 +109,7 @@ void *playThread(void *threadargs)
             buffer_location = 0;
             bufferReading = !bufferReading; // switches column one it finishes one column
         }
+	}
     }
 
     pthread_exit(NULL);
@@ -127,8 +118,8 @@ void *playThread(void *threadargs)
 int main()
 {
     // Call the setup GPIO function
-    if(setup_gpio()==-1)
-    {
+	if(setup_gpio()==-1)
+	{
         printf("Your initialization isn't correct\n");
         return 0;
     }
@@ -139,7 +130,7 @@ int main()
      */
 
     //Write your logic here
-    pthread_attr_t tattr;
+	pthread_attr_t tattr;
     pthread_t thread_id;
     int newprio = 99;
     sched_param param;
@@ -179,8 +170,8 @@ int main()
     int counter = 0;
     int bufferWriting = 0;
     ch = fgetc(filePointer);
-    unsigned char one = 0b11111100; //first 8 bits in the DAC register
-    unsigned char two = 0b01110000; //last 8 bits in the DAC register
+    //unsigned char one = 0b11111100; //first 8 bits in the DAC register
+    unsigned char two = 0b01010000; //last 8 bits in the DAC register
     unsigned char input = 0;
     // Have a loop to read from the file
 	 while(ch != EOF)
@@ -195,7 +186,7 @@ int main()
         input = (two)|(ch>>6);
         buffer[bufferWriting][counter][0] = input;
         //Set next 8 bit packet
-        input = (one)&(ch<<2);
+        input = (ch<<2);
         buffer[bufferWriting][counter][1] = input;
         counter++;
         if(counter >= BUFFER_SIZE+1)
