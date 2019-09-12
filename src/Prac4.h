@@ -34,8 +34,8 @@
 #define BUFFER_SIZE 1000
 
 //SPI Settings
-#define SPI_CHAN 13// 21
-#define SPI_SPEED 256000// Write your value here
+#define SPI_CHAN 0// pin 19
+#define SPI_SPEED 256000
 
 //Filename
 #define FILENAME "src/sound_16k_8bit.raw"
